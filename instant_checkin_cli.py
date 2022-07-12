@@ -104,6 +104,9 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
+    except Exception as e:
+        print(f"\n\033[91mError\033[0m: {e}")
+        exit(1)
     except KeyboardInterrupt:
         print("\n\n\033[91mExiting...\033[0m")
         invalidateToken(getBearerToken())
