@@ -15,7 +15,7 @@ def getBearerToken() -> str:
     url = f"{jss}/api/v1/auth/token"
     headers = {"Accept": "application/json"}
     response = requests.post(url, auth=(username, password), headers=headers)
-    token = response.json()['token']
+    token = response.json()["token"]
     return token
 
 
@@ -44,8 +44,8 @@ def user_input() -> str:
 
 
 def update_room(chosen: str, token: str) -> None:
-    name = (chosen.split(":")[1])
-    ids = (chosen.split(":")[0])
+    name = chosen.split(":")[1]
+    ids = chosen.split(":")[0]
     headers = {"Authorization": f"Bearer {token}"}
     data = "<computer><location><room>check-in</room></location></computer>"
     url = f"{jss}/JSSResource/computers/id/{ids}"
@@ -67,11 +67,11 @@ def main() -> None:
     url = f"{jss}/JSSResource/computers/match/{username}"
     headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers).json()
-    data = response['computers']
+    data = response["computers"]
 
     if data:
         for computer in data:
-            if "ready" in computer['room'].lower():
+            if "ready" in computer["room"].lower():
                 computers.append(f"{computer['id']}:{computer['name']}")
             else:
                 print(f"\n\033[91mWarning\033[0m: {computer['name']}: Not ready for Instant Check-in")
@@ -93,7 +93,7 @@ def main() -> None:
             return
 
         try:
-            chosen = computers[ids-1]
+            chosen = computers[ids - 1]
             print("\n-------------------------------------")
             print(f"\n\033[93mRequesting an instant check-in\033[0m: {chosen}")
             update_room(chosen, token)
