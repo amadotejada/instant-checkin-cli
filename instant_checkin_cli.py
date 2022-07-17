@@ -4,6 +4,7 @@ from unopass import unopass as secret
 
 try:
     print("\n\033[93mRetrieving Jamf secrets via unopass...\033[0m")
+    # 1password variables, {vault}, {item_name}, {field_name}
     username = secret.unopass("personal", "hyper_jamf", "username")
     password = secret.unopass("personal", "hyper_jamf", "credential")
     jss = secret.unopass("personal", "hyper_Jamf", "url")
@@ -16,8 +17,7 @@ def getBearerToken() -> str:
     url = f"{jss}/api/v1/auth/token"
     headers = {"Accept": "application/json"}
     response = requests.post(url, auth=(username, password), headers=headers)
-    token = response.json()["token"]
-    return token
+    return response.json()["token"]
 
 
 def invalidateToken(token: str) -> str:
@@ -78,11 +78,10 @@ def main() -> None:
     username = user_input()
     computers, usernames = [], []
     results, used = [], []
-    usernames = set()
-    usernames.add(username)
-    usernames.add(username.replace(".", ""))
-    usernames.add(username + "@DOMAIN.com")  # change to Jamf domain
+    usernames = {username, username.replace(".", "")}
+    usernames.add(f"{username}@DOMAIN.com")
     usernames.add(username.replace(".", "") + "@DOMAIN.com")
+    print(usernames)
 
     for u in usernames:
         headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
@@ -90,9 +89,7 @@ def main() -> None:
         response = requests.get(url, headers=headers)
         data = response.json()
         if data != []:
-            for u in data["computers"]:
-                computers.append(u)
-
+            computers.extend(iter(data["computers"]))
     unique = [x for x in computers if x not in used and (used.append(x) or True)]
     for c in unique:
         if "ready" in c["room"].lower():
@@ -105,49 +102,53 @@ def main() -> None:
             )
 
     if results:
-        sresults = set(results)
-        print(
-            f"\n-------------------------------------\n"
-            f"\n\033[92mJamf Laptop Lookup Results ({len(sresults)}):\033[0m {username}\n"
-        )
-
-        for ids, name in enumerate(sorted(sresults), start=1):
-            print(f"{ids}, Laptop {name}")
-
-        sorted_results = sorted(sresults)
-
-        if len(sorted_results) > 1:
-            print(
-                "\nEnter a number from above or type "
-                "\033[92mALL\033[0m to check-in all laptops:\n"
-            )
-        else:
-            print(
-                "\nEnter the number from above to check-in the laptop:\n"
-            )
-
-        while True:
-            chosen = input()
-            if chosen.upper() == "ALL":
-                for c in sorted_results:
-                    update_room(c, token)
-                break
-            elif chosen.isdigit():
-                if int(chosen) <= len(sorted_results) and int(chosen) > 0:
-                    update_room(sorted_results[int(chosen) - 1], token)
-                    break
-                else:
-                    print(
-                        f"\n\033[91mError\033[0m: {chosen} is not a valid option, try again below\n"
-                    )
-            else:
-                print(
-                    f"\n\033[91mError\033[0m: {chosen} is not a valid option, try again below\n"
-                )
+        jamf_results(results, username, token)
     else:
         print(f"\n\033[91mError\033[0m: No ready computers found for {username}")
         invalidateToken(token)
         exit(1)
+
+
+def jamf_results(results, username, token):
+    sresults = set(results)
+    print(
+        f"\n-------------------------------------\n"
+        f"\n\033[92mJamf Laptop Lookup Results ({len(sresults)}):\033[0m {username}\n"
+    )
+
+    for ids, name in enumerate(sorted(sresults), start=1):
+        print(f"{ids}, Laptop {name}")
+
+    sorted_results = sorted(sresults)
+
+    if len(sorted_results) > 1:
+        print(
+            "\nEnter a number from above or type "
+            "\033[92mALL\033[0m to check-in all laptops:\n"
+        )
+    else:
+        print(
+            "\nEnter the number from above to check-in the laptop:\n"
+        )
+
+    while True:
+        chosen = input()
+        if chosen.upper() == "ALL":
+            for c in sorted_results:
+                update_room(c, token)
+            break
+        elif chosen.isdigit():
+            if int(chosen) <= len(sorted_results) and int(chosen) > 0:
+                update_room(sorted_results[int(chosen) - 1], token)
+                break
+            else:
+                print(
+                    f"\n\033[91mError\033[0m: {chosen} is not a valid option, try again below\n"
+                )
+        else:
+            print(
+                f"\n\033[91mError\033[0m: {chosen} is not a valid option, try again below\n"
+            )
 
 
 if __name__ == "__main__":
