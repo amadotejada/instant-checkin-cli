@@ -4,7 +4,7 @@
 
 *instant-checkin-cli* is a companion CLI tool for [instant-checkin](https://github.com/amadotejada/instant-checkin) 
 
-*instant-checkin-cli* allows you to force computers to check-in to Jamf MDM via the terminal
+*instant-checkin-cli* allows you to force remote computers to check-in to Jamf MDM via the terminal
 
 <br/>
  <img src="./screenshots/1080_4.gif" width="100%">
